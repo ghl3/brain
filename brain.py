@@ -3,14 +3,25 @@ from __future__ import division
 import numpy as np
 import random
 
+random.seed(42)
 
 class Network(object):
 
-    def __init__(self, sizes):
+    def __init__(self, sizes, weights=None, biases=None):
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+
+        if biases is not None:
+            self.biases = biases
+        else:
+            self.biases = [np.random.randn(y, 1)
+                            for y in sizes[1:]]
+
+        if weights is not None:
+            self.weights = weights
+        else:
+            self.weights = [np.random.randn(y, x)
+                            for x, y in zip(sizes[:-1], sizes[1:])]
 
 
     def feedforward(self, a):
@@ -36,17 +47,22 @@ class Network(object):
         batch.
         """
 
-        network = self
-
-        # We store the history of our neural networks
-        networks = [network] if save_history else None
-
         assert(len(training_data) == len(targets))
+
+        #print training_data[0].shape
+        #print targets[0].shape
+        #assert(training_data[0].shape == (self.sizes[0], 1))
+
 
         # TODO: Avoid unnecessary copy
         data_and_targets = zip_data_and_labels(training_data, targets)
 
         n = len(data_and_targets)
+
+        network = self
+
+        # We store the history of our neural networks
+        networks = [network] if save_history else None
 
         print "Num training: {} Training Shape: {} Label Shape: {}".format(n, data_and_targets[0][0].shape, data_and_targets[0][1].shape)
 
@@ -56,8 +72,8 @@ class Network(object):
             mini_batches = [
                 data_and_targets[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
-            for i, mini_batch in enumerate(mini_batches):
 
+            for i, mini_batch in enumerate(mini_batches):
                 network = network.update_mini_batch(mini_batch, eta)
 
                 if i % 1000 == 0:
@@ -89,11 +105,7 @@ class Network(object):
         biases = [b-(eta/len(mini_batch))*nb
                   for b, nb in zip(self.biases, nabla_b)]
 
-        network = Network(self.sizes)
-        network.weights = weights
-        network.biases = biases
-
-        return network
+        return Network(self.sizes, weights=weights, biases=biases)
 
 
     def backprop(self, x, y):
@@ -119,8 +131,7 @@ class Network(object):
             activations.append(activation)
 
         # backward pass
-        delta = self.cost_derivative(activations[-1], y) * \
-                sigmoid_prime(zs[-1])
+        delta = self.cost_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
 
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
@@ -170,6 +181,7 @@ class Network(object):
 def sigmoid(z):
     return 1.0/(1.0+np.exp(-z))
 
+
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
@@ -191,12 +203,13 @@ def zip_data_and_labels(data, labels):
 
 
 def _numeric_target_to_vec(target, n):
-    ret = np.zeros((n,1))
-    ret[target] = 1
+    ret = np.zeros((n,1), dtype='float32')
+    ret[target] = 1.0
     return ret
 
 def _data_form(input_list):
-    x = np.array(input_list)
+    x = np.array(input_list, dtype='float32')
+    x = x / 256.0
     return np.reshape(x, (len(input_list), 1))
 
 

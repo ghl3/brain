@@ -10,6 +10,7 @@ import pickle
 import os
 import tempfile
 
+
 def main():
 
     parser = argparse.ArgumentParser(description='Train a neural network.')
@@ -35,10 +36,13 @@ def main():
     parser.add_argument('--save', type=str, default=None,
                         help='If present, directory where the results should be saved.  Will not overwrite existing directory.')
 
+    parser.add_argument('--save-epochs', default=False, action='store_true',
+                        help='Save a checkpoint of the model at all epochs.')
 
     args = parser.parse_args()
 
     run(args)
+
 
 def run(args):
 
@@ -52,7 +56,8 @@ def run(args):
     fitted, epochs = nn.SGD(training_data, training_labels,
                             epochs=args.epochs,
                             mini_batch_size=args.mini_batch_size,
-                            eta=args.eta)
+                            eta=args.eta,
+                            save_history=args.save_epochs)
 
     if args.testing_data:
         print "Testing data"
@@ -88,6 +93,7 @@ def mkdir_or_temp(dir):
     else:
         os.mkdir(dir)
         return dir
+
 
 
 if __name__ == '__main__':
