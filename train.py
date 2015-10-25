@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 
 from brain.network import Network
+from brain import activation_functions
 
 from mnist import MNIST
 
@@ -25,6 +26,9 @@ def main():
 
     parser.add_argument("--testing_data", type=str, default="./data",
                         help="Location of a directory containing the testing")
+
+    parser.add_argument("--output_activation", type=str, default=None,
+                        help="The output activation function.  Defaults to Sigmoid")
 
     parser.add_argument('--epochs', type=int, default=5,
                         help='Number of epochs for the training')
@@ -48,15 +52,20 @@ def main():
 
 def run(args):
 
-    mndata = MNIST(args.training_data)
+    nn_args = {}
+
+    if args.output_activation:
+        activation_class = getattr(activation_functions, args.output_activation)
+        nn_args['output_activation'] = activation_class()
+
+    nn = Network(args.shape, seed=42, **nn_args)
 
     print "Loading the training data"
+    mndata = MNIST(args.training_data)
     training_data, training_labels = mndata.load_training()
 
     training_data = convert_training_data(training_data)
     training_labels = convert_number_labels_to_vectors(training_labels)
-
-    nn = Network(args.shape, seed=42)
 
     fitted, epochs = nn.SGD(training_data, training_labels,
                             epochs=args.epochs,

@@ -44,3 +44,5 @@ class CrossEntropyCost(object):
         """
         return (a-y)
 
+
+

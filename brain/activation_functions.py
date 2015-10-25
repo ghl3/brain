@@ -23,7 +23,7 @@ class SoftMax(object):
     def fn(A):
 
         total = 0.0
-        for a in a:
+        for a in A:
             total += np.exp(a)
 
         return np.exp(A) / total

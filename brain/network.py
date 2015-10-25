@@ -139,7 +139,7 @@ class Network(object):
             activations.append(activation)
 
         # backward pass
-        delta = self.cost.delta(zs[-1], activations[-1], y) #   _function_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
+        delta = self.cost.delta(zs[-1], activations[-1], y)
 
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
@@ -153,7 +153,7 @@ class Network(object):
         for l in xrange(2, self.num_layers):
             z = zs[-l]
             activ_func = self._activation_funcs[-l]
-            sp = activ_func.fprime(z) #sigmoid_prime(z)
+            sp = activ_func.fprime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
