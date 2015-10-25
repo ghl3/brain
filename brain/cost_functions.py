@@ -3,6 +3,7 @@ import numpy as np
 
 from functions import *
 
+
 class QuadraticCost(object):
 
     @staticmethod
@@ -42,3 +43,4 @@ class CrossEntropyCost(object):
 
         """
         return (a-y)
+

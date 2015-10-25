@@ -2,18 +2,24 @@ from __future__ import division
 
 import numpy as np
 
-from cost_functions import *
+
 from functions import *
+from cost_functions import *
+from activation_functions import *
 
 class Network(object):
 
     def __init__(self, sizes, weights=None, biases=None,
                  cost = QuadraticCost(),
+                 output_activation=Sigmoid(),
                  seed=None):
 
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.cost = cost
+
+        self._activation_funcs = [Sigmoid() for _ in sizes[1:-1]]
+        self._activation_funcs.append(output_activation)
 
         self._np_random = np.random.RandomState(seed)
 
@@ -34,8 +40,9 @@ class Network(object):
         """
         Return the output of the network if "a" is input.
         """
-        for b, w in zip(self.biases, self.weights):
-            a = sigmoid(np.dot(w, a) + b)
+        for activation, b, w in zip(self._activation_funcs, self.biases, self.weights):
+            z = np.dot(w, a) + b
+            a = activation.fn(z)
         return a
 
 
@@ -125,10 +132,10 @@ class Network(object):
 
         # list to store all the z vectors, layer by layer
         zs = []
-        for b, w in zip(self.biases, self.weights):
+        for activ_func, b, w in zip(self._activation_funcs, self.biases, self.weights):
             z = np.dot(w, activation) + b
             zs.append(z)
-            activation = sigmoid(z)
+            activation = activ_func.fn(z)
             activations.append(activation)
 
         # backward pass
@@ -145,7 +152,8 @@ class Network(object):
         # that Python can use negative indices in lists.
         for l in xrange(2, self.num_layers):
             z = zs[-l]
-            sp = sigmoid_prime(z)
+            activ_func = self._activation_funcs[-l]
+            sp = activ_func.fprime(z) #sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
