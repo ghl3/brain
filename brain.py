@@ -1,23 +1,7 @@
+from __future__ import division
 
 import numpy as np
 import random
-
-
-def sigmoid(z):
-    return 1.0/(1.0+np.exp(-z))
-
-def sigmoid_prime(z):
-    """Derivative of the sigmoid function."""
-    return sigmoid(z)*(1-sigmoid(z))
-
-def _numeric_target_to_vec(target, n):
-    ret = np.zeros(n)
-    ret[target] = 1
-    return ret
-
-def _training_vector_form(input_list):
-    x = np.array(input_list)
-    return x #np.reshape(x, (len(input_list), 1))
 
 
 class Network(object):
@@ -25,10 +9,8 @@ class Network(object):
     def __init__(self, sizes):
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1)
-                       for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)
-                        for x, y in zip(sizes[:-1], sizes[1:])]
+        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
+        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
 
 
     def feedforward(self, a):
@@ -40,7 +22,8 @@ class Network(object):
         return a
 
 
-    def SGD(self, training_data, targets, epochs, mini_batch_size, eta,
+    def SGD(self, training_data, targets,
+            epochs, mini_batch_size, eta,
             save_history=False):
         """
         Train the neural network using mini-batch stochastic
@@ -61,8 +44,8 @@ class Network(object):
         assert(len(training_data) == len(targets))
 
         # TODO: Avoid unnecessary copy
-        data_and_targets = [(_training_vector_form(d), _numeric_target_to_vec(t, n=10))
-                            for d, t in zip(training_data, targets)]
+        data_and_targets = zip_data_and_labels(training_data, targets) #[(_training_vector_form(d), _numeric_target_to_vec(t, n=10))
+                            #for d, t in zip(training_data, targets)]
 
         n = len(data_and_targets)
 
@@ -74,14 +57,14 @@ class Network(object):
             mini_batches = [
                 data_and_targets[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
-            for mini_batch in mini_batches:
-
-                print "Mini Batch: {}".format(len(mini_batch))
+            for i, mini_batch in enumerate(mini_batches):
 
                 network = network.update_mini_batch(mini_batch, eta)
                 if save_history:
                     networks.append(network)
-                print "Epoch {0} complete".format(j)
+
+                if i % 1000 == 0:
+                    print "Mini Batch: {} in Epoch {} complete".format(i, j)
 
         return network, networks
 
@@ -129,7 +112,7 @@ class Network(object):
         # list to store all the z vectors, layer by layer
         zs = []
         for b, w in zip(self.biases, self.weights):
-            z = np.dot(w, activation)+b
+            z = np.dot(w, activation) + b
             zs.append(z)
             activation = sigmoid(z)
             activations.append(activation)
@@ -137,6 +120,7 @@ class Network(object):
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
                 sigmoid_prime(zs[-1])
+
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
 
@@ -155,17 +139,70 @@ class Network(object):
         return (nabla_b, nabla_w)
 
 
-    def evaluate(self, test_data, evaluator=np.argmax):
+    def evaluate(self, test_data, test_labels, evaluator=np.argmax):
         """Return the number of test inputs for which the neural
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
-        test_results = [(evaluator(self.feedforward(x)), y)
-                        for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results)
+
+        #test_data_and_labels = zip_data_and_labels(test_data, test_labels)
+
+        assert(len(test_data) == len(test_labels))
+
+        test_results = [(evaluator(self.feedforward(_data_form(x))), y)
+                        for (x, y) in zip(test_data, test_labels)]
+        #stest_data_and_labels]
+
+        num = len(test_data)
+        num_correct = sum(int(x == y) for (x, y) in test_results)
+        num_incorrect = num - num_correct
+        accuracy = num_correct / num
+
+        return {'num_testing': len(test_data),
+                'num_correct': num_correct,
+                'num_incorrect': num_incorrect,
+                'accuracy': accuracy}
+
+        # TODO: Return a summary object
+        #return sum(int(x == y) for (x, y) in test_results)
 
 
     def cost_derivative(self, output_activations, y):
          """Return the vector of partial derivatives \partial C_x /
          \partial a for the output activations."""
          return (output_activations-y)
+
+
+def sigmoid(z):
+    return 1.0/(1.0+np.exp(-z))
+
+def sigmoid_prime(z):
+    """Derivative of the sigmoid function."""
+    return sigmoid(z)*(1-sigmoid(z))
+
+
+def zip_data_and_labels(data, labels):
+    """
+    Convert a list of data and a list of labels
+    into the form used internally by this structure.
+    Currently, creates a deep copy.
+    """
+    assert(len(data) == len(labels))
+
+    # TODO: Avoid unnecessary copy
+    data_and_labels = [(_data_form(d), _numeric_target_to_vec(t, n=10))
+                       for d, t in zip(data, labels)]
+
+    return data_and_labels
+
+
+def _numeric_target_to_vec(target, n):
+    ret = np.zeros((n,1))
+    ret[target] = 1
+    return ret
+
+def _data_form(input_list):
+    x = np.array(input_list)
+    return np.reshape(x, (len(input_list), 1))
+
+
