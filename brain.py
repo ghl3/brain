@@ -6,7 +6,9 @@ import random
 random.seed(42)
 
 
+
 class Network(object):
+
 
     def __init__(self, sizes, weights=None, biases=None):
         self.num_layers = len(sizes)
@@ -49,9 +51,6 @@ class Network(object):
         """
 
         assert(len(training_data) == len(labels))
-
-        print training_data[0].shape
-        print labels[0].shape
         assert(training_data[0].shape == (self.sizes[0], 1))
         assert(labels[0].shape == (self.sizes[-1], 1))
 
@@ -67,10 +66,7 @@ class Network(object):
         print "Num training: {} Training Shape: {} Label Shape: {}".format(n, data_and_labels[0][0].shape, data_and_labels[0][1].shape)
 
         for j in xrange(epochs):
-            # TODO: Prevent in-place shuffling
-            shuffled_data = randomly_ordered(data_and_labels) #[random_order(len(data_and_labels))]
-            #indices = 
-            #random.shuffle(data_and_labels)
+            shuffled_data = randomly_ordered(data_and_labels)
             mini_batches = [
                 shuffled_data[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
@@ -153,23 +149,28 @@ class Network(object):
         return (nabla_b, nabla_w)
 
 
-    def evaluate(self, test_data, test_labels, evaluator=np.argmax):
+    def evaluate(self, data, label_indices, evaluator=np.argmax):
         """Return the number of test inputs for which the neural
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
 
-        assert(len(test_data) == len(test_labels))
+        assert(len(data) == len(label_indices))
 
-        test_results = [(evaluator(self.feedforward(x)), y)
-                        for (x, y) in zip(test_data, test_labels)]
+        assert(len(data) == len(label_indices))
+        assert(data[0].shape == (self.sizes[0], 1))
+        for idx in label_indices:
+            assert(idx >= 0 and idx < self.sizes[-1])
 
-        num = len(test_data)
-        num_correct = sum(int(x == y) for (x, y) in test_results)
+        results = [(evaluator(self.feedforward(x)), y)
+                        for (x, y) in zip(data, label_indices)]
+
+        num = len(data)
+        num_correct = sum(int(x == y) for (x, y) in results)
         num_incorrect = num - num_correct
         accuracy = num_correct / num
 
-        return {'num_testing': len(test_data),
+        return {'num_testing': len(data),
                 'num_correct': num_correct,
                 'num_incorrect': num_incorrect,
                 'accuracy': accuracy}
@@ -191,6 +192,7 @@ def sigmoid_prime(z):
 
 def randomly_ordered(items):
     return [items[i] for i in random_order(len(items))]
+
 
 def random_order(n):
     indices = range(n)
