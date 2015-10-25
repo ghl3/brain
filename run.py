@@ -56,7 +56,7 @@ def run(args):
     training_data = convert_training_data(training_data)
     training_labels = convert_number_labels_to_vectors(training_labels)
 
-    nn = Network(args.shape)
+    nn = Network(args.shape, seed=42)
 
     fitted, epochs = nn.SGD(training_data, training_labels,
                             epochs=args.epochs,

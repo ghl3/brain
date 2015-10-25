@@ -1,29 +1,26 @@
 from __future__ import division
 
 import numpy as np
-import random
-
-random.seed(42)
-
-
 
 class Network(object):
 
 
-    def __init__(self, sizes, weights=None, biases=None):
+    def __init__(self, sizes, weights=None, biases=None, seed=None):
         self.num_layers = len(sizes)
         self.sizes = sizes
+
+        self._np_random = np.random.RandomState(seed)
 
         if biases is not None:
             self.biases = biases
         else:
-            self.biases = [np.random.randn(y, 1)
+            self.biases = [self._np_random.randn(y, 1)
                             for y in sizes[1:]]
 
         if weights is not None:
             self.weights = weights
         else:
-            self.weights = [np.random.randn(y, x)
+            self.weights = [self._np_random.randn(y, x)
                             for x, y in zip(sizes[:-1], sizes[1:])]
 
 
@@ -66,7 +63,7 @@ class Network(object):
         print "Num training: {} Training Shape: {} Label Shape: {}".format(n, data_and_labels[0][0].shape, data_and_labels[0][1].shape)
 
         for j in xrange(epochs):
-            shuffled_data = randomly_ordered(data_and_labels)
+            shuffled_data = self.randomly_ordered(data_and_labels)
             mini_batches = [
                 shuffled_data[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
@@ -180,6 +177,14 @@ class Network(object):
          \partial a for the output activations."""
          return (output_activations-y)
 
+    def random_order(self, n):
+        indices = range(n)
+        self._np_random.shuffle(indices)
+        return indices
+
+    def randomly_ordered(self, items):
+        return [items[i] for i in self.random_order(len(items))]
+
 
 def sigmoid(z):
     return 1.0/(1.0+np.exp(-z))
@@ -190,11 +195,4 @@ def sigmoid_prime(z):
     return sigmoid(z)*(1-sigmoid(z))
 
 
-def randomly_ordered(items):
-    return [items[i] for i in random_order(len(items))]
 
-
-def random_order(n):
-    indices = range(n)
-    random.shuffle(indices)
-    return indices
