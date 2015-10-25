@@ -2,12 +2,18 @@ from __future__ import division
 
 import numpy as np
 
+from cost_functions import *
+from functions import *
+
 class Network(object):
 
+    def __init__(self, sizes, weights=None, biases=None,
+                 cost = QuadraticCost(),
+                 seed=None):
 
-    def __init__(self, sizes, weights=None, biases=None, seed=None):
         self.num_layers = len(sizes)
         self.sizes = sizes
+        self.cost = cost
 
         self._np_random = np.random.RandomState(seed)
 
@@ -126,7 +132,7 @@ class Network(object):
             activations.append(activation)
 
         # backward pass
-        delta = self.cost_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
+        delta = self.cost.delta(zs[-1], activations[-1], y) #   _function_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
 
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
@@ -172,27 +178,14 @@ class Network(object):
                 'num_incorrect': num_incorrect,
                 'accuracy': accuracy}
 
-    def cost_derivative(self, output_activations, y):
-         """Return the vector of partial derivatives \partial C_x /
-         \partial a for the output activations."""
-         return (output_activations-y)
 
     def random_order(self, n):
         indices = range(n)
         self._np_random.shuffle(indices)
         return indices
 
+
     def randomly_ordered(self, items):
         return [items[i] for i in self.random_order(len(items))]
-
-
-def sigmoid(z):
-    return 1.0/(1.0+np.exp(-z))
-
-
-def sigmoid_prime(z):
-    """Derivative of the sigmoid function."""
-    return sigmoid(z)*(1-sigmoid(z))
-
 
 

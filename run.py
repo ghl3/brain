@@ -3,7 +3,7 @@ import argparse
 
 import numpy as np
 
-from brain import Network
+from brain.network import Network
 
 from mnist import MNIST
 
