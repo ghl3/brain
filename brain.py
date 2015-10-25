@@ -44,8 +44,7 @@ class Network(object):
         assert(len(training_data) == len(targets))
 
         # TODO: Avoid unnecessary copy
-        data_and_targets = zip_data_and_labels(training_data, targets) #[(_training_vector_form(d), _numeric_target_to_vec(t, n=10))
-                            #for d, t in zip(training_data, targets)]
+        data_and_targets = zip_data_and_labels(training_data, targets)
 
         n = len(data_and_targets)
 
@@ -60,11 +59,13 @@ class Network(object):
             for i, mini_batch in enumerate(mini_batches):
 
                 network = network.update_mini_batch(mini_batch, eta)
-                if save_history:
-                    networks.append(network)
 
                 if i % 1000 == 0:
                     print "Mini Batch: {} in Epoch {} complete".format(i, j)
+
+            # We save at the end of an epoch
+            if save_history:
+                networks.append(network)
 
         return network, networks
 
@@ -145,13 +146,10 @@ class Network(object):
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
 
-        #test_data_and_labels = zip_data_and_labels(test_data, test_labels)
-
         assert(len(test_data) == len(test_labels))
 
         test_results = [(evaluator(self.feedforward(_data_form(x))), y)
                         for (x, y) in zip(test_data, test_labels)]
-        #stest_data_and_labels]
 
         num = len(test_data)
         num_correct = sum(int(x == y) for (x, y) in test_results)
@@ -162,10 +160,6 @@ class Network(object):
                 'num_correct': num_correct,
                 'num_incorrect': num_incorrect,
                 'accuracy': accuracy}
-
-        # TODO: Return a summary object
-        #return sum(int(x == y) for (x, y) in test_results)
-
 
     def cost_derivative(self, output_activations, y):
          """Return the vector of partial derivatives \partial C_x /

@@ -5,6 +5,10 @@ from brain import Network
 
 from mnist import MNIST
 
+import pickle
+
+import os
+import tempfile
 
 def main():
 
@@ -43,12 +47,12 @@ def run(args):
     print "Loading the training data"
     training_data, training_labels = mndata.load_training()
 
-    nn = Network(args.shape) #[784, 30, 10])
+    nn = Network(args.shape)
 
-    fitted, iterations = nn.SGD(training_data, training_labels,
-                                epochs=args.epochs,
-                                mini_batch_size=args.mini_batch_size,
-                                eta=args.eta)
+    fitted, epochs = nn.SGD(training_data, training_labels,
+                            epochs=args.epochs,
+                            mini_batch_size=args.mini_batch_size,
+                            eta=args.eta)
 
     if args.testing_data:
         print "Testing data"
@@ -57,8 +61,33 @@ def run(args):
         print evaluation
 
     if args.save:
-        print "Too lazy to do save yet..."
-        raise NotImplementedError()
+
+        target_dir = mkdir_or_temp(args.save)
+
+        fitted_path = "{}/nn.pkl".format(target_dir)
+
+        with open(fitted_path, 'wb') as handle:
+            pickle.dump(fitted, handle)
+
+        if epochs is not None:
+            for i, epoch in enumerate(epochs):
+                epoch_path = '{}/nn_epoch_{}.pkl'.format(target_dir, i)
+                with open(epoch_path, 'wb') as handle:
+                    pickle.dump(epoch, handle)
+                    print "Saved epoch {} to {}".format(i, epoch_path)
+
+
+def mkdir_or_temp(dir):
+    if os.path.exists(dir):
+        print "Cannot save in target directory: {}.  Already exists".format(dir)
+        print "Saving to dummy dir"
+        handle, file_name = tempfile.mkstemp()
+        return file_name
+
+    # TODO: Race condition
+    else:
+        os.mkdir(dir)
+        return dir
 
 
 if __name__ == '__main__':
