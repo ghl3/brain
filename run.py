@@ -124,20 +124,5 @@ def _data_form(input_list):
     return np.reshape(x, (len(input_list), 1))
 
 
-def zip_data_and_labels(data, labels):
-    """
-    Convert a list of data and a list of labels
-    into the form used internally by this structure.
-    Currently, creates a deep copy.
-    """
-    assert(len(data) == len(labels))
-
-    # TODO: Avoid unnecessary copy
-    data_and_labels = [(_data_form(d), _numeric_label_to_vec(t, n=10))
-                       for d, t in zip(data, labels)]
-
-    return data_and_labels
-
-
 if __name__ == '__main__':
     main()

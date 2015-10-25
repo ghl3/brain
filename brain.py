@@ -57,9 +57,6 @@ class Network(object):
 
         data_and_labels = zip(training_data, labels)
 
-        # TODO: Avoid unnecessary copy
-        #data_and_labels = zip_data_and_labels(training_data, labels)
-
         n = len(data_and_labels)
 
         network = self
@@ -71,9 +68,11 @@ class Network(object):
 
         for j in xrange(epochs):
             # TODO: Prevent in-place shuffling
-            random.shuffle(data_and_labels)
+            shuffled_data = randomly_ordered(data_and_labels) #[random_order(len(data_and_labels))]
+            #indices = 
+            #random.shuffle(data_and_labels)
             mini_batches = [
-                data_and_labels[k:k+mini_batch_size]
+                shuffled_data[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
 
             for i, mini_batch in enumerate(mini_batches):
@@ -190,3 +189,10 @@ def sigmoid_prime(z):
     return sigmoid(z)*(1-sigmoid(z))
 
 
+def randomly_ordered(items):
+    return [items[i] for i in random_order(len(items))]
+
+def random_order(n):
+    indices = range(n)
+    random.shuffle(indices)
+    return indices
