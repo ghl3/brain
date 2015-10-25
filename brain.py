@@ -5,6 +5,7 @@ import random
 
 random.seed(42)
 
+
 class Network(object):
 
     def __init__(self, sizes, weights=None, biases=None):
@@ -33,7 +34,7 @@ class Network(object):
         return a
 
 
-    def SGD(self, training_data, targets,
+    def SGD(self, training_data, labels,
             epochs, mini_batch_size, eta,
             save_history=False):
         """
@@ -47,30 +48,32 @@ class Network(object):
         batch.
         """
 
-        assert(len(training_data) == len(targets))
+        assert(len(training_data) == len(labels))
 
-        #print training_data[0].shape
-        #print targets[0].shape
-        #assert(training_data[0].shape == (self.sizes[0], 1))
+        print training_data[0].shape
+        print labels[0].shape
+        assert(training_data[0].shape == (self.sizes[0], 1))
+        assert(labels[0].shape == (self.sizes[-1], 1))
 
+        data_and_labels = zip(training_data, labels)
 
         # TODO: Avoid unnecessary copy
-        data_and_targets = zip_data_and_labels(training_data, targets)
+        #data_and_labels = zip_data_and_labels(training_data, labels)
 
-        n = len(data_and_targets)
+        n = len(data_and_labels)
 
         network = self
 
         # We store the history of our neural networks
         networks = [network] if save_history else None
 
-        print "Num training: {} Training Shape: {} Label Shape: {}".format(n, data_and_targets[0][0].shape, data_and_targets[0][1].shape)
+        print "Num training: {} Training Shape: {} Label Shape: {}".format(n, data_and_labels[0][0].shape, data_and_labels[0][1].shape)
 
         for j in xrange(epochs):
             # TODO: Prevent in-place shuffling
-            random.shuffle(data_and_targets)
+            random.shuffle(data_and_labels)
             mini_batches = [
-                data_and_targets[k:k+mini_batch_size]
+                data_and_labels[k:k+mini_batch_size]
                 for k in xrange(0, n, mini_batch_size)]
 
             for i, mini_batch in enumerate(mini_batches):
@@ -159,7 +162,7 @@ class Network(object):
 
         assert(len(test_data) == len(test_labels))
 
-        test_results = [(evaluator(self.feedforward(_data_form(x))), y)
+        test_results = [(evaluator(self.feedforward(x)), y)
                         for (x, y) in zip(test_data, test_labels)]
 
         num = len(test_data)
@@ -185,31 +188,5 @@ def sigmoid(z):
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
-
-
-def zip_data_and_labels(data, labels):
-    """
-    Convert a list of data and a list of labels
-    into the form used internally by this structure.
-    Currently, creates a deep copy.
-    """
-    assert(len(data) == len(labels))
-
-    # TODO: Avoid unnecessary copy
-    data_and_labels = [(_data_form(d), _numeric_target_to_vec(t, n=10))
-                       for d, t in zip(data, labels)]
-
-    return data_and_labels
-
-
-def _numeric_target_to_vec(target, n):
-    ret = np.zeros((n,1), dtype='float32')
-    ret[target] = 1.0
-    return ret
-
-def _data_form(input_list):
-    x = np.array(input_list, dtype='float32')
-    x = x / 256.0
-    return np.reshape(x, (len(input_list), 1))
 
 
